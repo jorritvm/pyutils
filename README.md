@@ -2,10 +2,16 @@
 Common utilities for python projects
 
 ## Development instructions
+The project does not use the src/ layout. 
+This means the package root is located directly in the project root. 
+
+As such you do not need to install the project in editable mode `poetry add --editable ./pyutils/`.  
+Instead, not installing the package at all will allow you to import the code directly from the project root.
+
 - clone the repo
 - install the dependencies
   ```
-  poetry install
+  poetry install --no-root
   ```
 - make changes
 - add tests and run them with 
@@ -19,7 +25,7 @@ Common utilities for python projects
   bump2version minor
   bump2version major
   ```
-- push
+- push to github
   ```cmd
   git push --follow-tags
   ```
