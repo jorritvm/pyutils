@@ -5,12 +5,14 @@ description = "Common utilities for python projects"
 authors = [
     {name = "Jorrit Vander Mynsbrugge",email = "44178217+jorritvm@users.noreply.github.com"}
 ]
-packages = [{ include = "pyutils" }]
+
 readme = "README.md"
 requires-python = ">=3.13,<4.0"
 dependencies = [
 ]
 
+[tool.poetry]
+packages = [{ include = "pyutils" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
