@@ -1,6 +1,6 @@
 [project]
 name = "pyutils-jvm"
-version = "0.1.0"
+version = "0.1.1"
 description = "Common utilities for python projects"
 authors = [
     {name = "Jorrit Vander Mynsbrugge",email = "44178217+jorritvm@users.noreply.github.com"}
