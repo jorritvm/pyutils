@@ -1,16 +1,18 @@
 from .dicts import merge_dicts, has_empty_leaves
 from .time import extract_iso_date, get_current_date_and_time_str, get_current_date_str, get_current_time_str
+from .vectors import detect_vector_interpolation
 
 __all__ = [
+    # dicts
     "merge_dicts",
     "has_empty_leaves",
+    # time
     "extract_iso_date",
     "get_current_date_and_time_str",
     "get_current_date_str",
     "get_current_time_str",
-    "test"
+    # vector
+    "detect_vector_interpolation",
+
 ]
 
-
-def test():
-    print("test")
