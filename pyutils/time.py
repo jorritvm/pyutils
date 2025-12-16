@@ -6,6 +6,7 @@ __all__ = [
     "get_current_date_and_time_str",
     "get_current_date_str",
     "get_current_time_str",
+    "parse_iso_date"
 ]
 
 def extract_iso_date(text: str, pattern: str = r'\d{4}-\d{2}-\d{2}') -> str | None:
@@ -36,3 +37,10 @@ def get_current_time_str(time_format: str,
     """Return the current time as a string formatted as desired."""
     now_datetime = datetime.now(tz)
     return now_datetime.strftime(time_format)
+
+def parse_iso_date(date_str: str) -> datetime.date:
+    """Parses an ISO date string (YYYY-M-D or YYYY-MM-DD) to a date object."""
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError(f"Invalid date format: {date_str}")
