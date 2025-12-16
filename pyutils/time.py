@@ -10,6 +10,8 @@ __all__ = [
     "get_current_date_str",
     "get_current_time_str",
     "parse_iso_date",
+    "localize_naive_datetimes",
+    "convert_local_datetimes_to_utc",
     "make_naive_df_timezone_aware",
 ]
 
@@ -48,6 +50,69 @@ def parse_iso_date(date_str: str) -> datetime.date:
         return datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         raise ValueError(f"Invalid date format: {date_str}")
+
+
+def localize_naive_datetimes(
+        naive_list: list[datetime | None],
+        tz: str = "Europe/Brussels"
+) -> list[datetime | None]:
+    """
+    Convert a list of naive Python datetime.datetime objects (no tzinfo) into timezone-aware datetimes,
+    resolving ambiguous (DST fallback) times automatically so the resulting timeline is non-decreasing.
+
+    Args:
+        naive_list (list[datetime | None]): List of naive datetime objects or None values.
+        tz (str): Timezone to localize the datetimes to. Default is "Europe/Brussels".
+
+    Returns:
+        list[datetime | None]: List of timezone-aware datetime objects in the specified timezone.
+    """
+    zone = ZoneInfo(tz)
+    aware_list = [None] * len(naive_list)
+    previous_naive_datetime = None
+
+    for i, current_naive_datetime in enumerate(naive_list):
+        # handles None elements
+        if current_naive_datetime is None:
+            aware_list[i] = None
+            continue
+
+        # ensure it's a naive datetime
+        if current_naive_datetime.tzinfo is not None:
+            raise ValueError(f"Expected naive datetime, got timezone-aware: {current_naive_datetime}")
+
+        # handles first element and any other leading None elements
+        if current_naive_datetime is not None and previous_naive_datetime is None:
+            previous_naive_datetime = current_naive_datetime
+            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=0)
+            continue
+
+        # time is moving forward, use fold=0 (earliest)
+        if current_naive_datetime > previous_naive_datetime:
+            previous_naive_datetime = current_naive_datetime
+            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=0)
+
+        # time is moving backwards, either due to DST fallback or out-of-order data, either way if we use fold 1 it is fine
+        elif current_naive_datetime <= previous_naive_datetime:
+            previous_naive_datetime = current_naive_datetime
+            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=1)
+
+    return aware_list
+
+
+def convert_local_datetimes_to_utc(
+        aware_list: list[datetime | None]
+) -> list[datetime | None]:
+    """
+    Convert a list of timezone-aware datetime objects to UTC.
+
+    Args:
+        aware_list (list[datetime | None]): List of timezone-aware datetime objects or None values.
+
+    Returns:
+        list[datetime | None]: List of datetime objects converted to UTC timezone.
+    """
+    return [dt.astimezone(timezone.utc) if dt is not None else None for dt in aware_list]
 
 
 def make_naive_df_timezone_aware(
@@ -89,56 +154,21 @@ def make_naive_df_timezone_aware(
     if col_local in df.columns:
         raise ValueError(f"Column '{col_local}' already exists in DataFrame.")
 
-    # precompute the two possible UTC timestamps for each naive timestamp
-    # for non-ambiguous times these will be equal.
-    zone = ZoneInfo(tz)
+    # get naive datetime list from dataframe
     naive_list = df[col].to_list()
-    aware_list = [None] * len(naive_list)
 
-    # build a list of timezone aware datetimes
-    previous_naive_datetime = None
-    for i, current_naive_datetime in enumerate(naive_list):
-        # handles None elements
-        if current_naive_datetime is None:
-            aware_list[i] = None
-            continue
+    # convert to timezone-aware datetimes in the specified timezone
+    aware_list = localize_naive_datetimes(naive_list, tz)
 
-        # ensure it's a naive datetime
-        if current_naive_datetime.tzinfo is not None:
-            raise ValueError(f"Expected naive datetime, got timezone-aware: {current_naive_datetime}")
+    # convert to UTC
+    aware_list_utc = convert_local_datetimes_to_utc(aware_list)
 
-        # handles first element and any other leading None elements
-        if current_naive_datetime is not None and previous_naive_datetime is None:
-            previous_naive_datetime = current_naive_datetime
-            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=0)
-            continue
+    # build Polars series
+    s_local = pl.Series(name=col_local, values=aware_list, )
 
-        # time is moving forward, use fold=0 (earliest)
-        if current_naive_datetime > previous_naive_datetime:
-            previous_naive_datetime = current_naive_datetime
-            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=0)
-
-        # time is moving backwards, either due to DST fallback or out-of-order data, either way if we use fold 1 it is fine
-        elif current_naive_datetime <= previous_naive_datetime:
-            previous_naive_datetime = current_naive_datetime
-            aware_list[i] = current_naive_datetime.replace(tzinfo=zone, fold=1)
-
-    # build Polars UTC and local time series
-    aware_list_utc = [dt.astimezone(timezone.utc) if dt is not None else None for dt in aware_list]
-    s_local = pl.Series(
-        name=col_local,
-        values=aware_list,
-    )
-
-    s_utc = pl.Series(
-        name=col_utc,
-        values=aware_list_utc,
-    )
+    s_utc = pl.Series(name=col_utc, values=aware_list_utc, )
 
     # add both UTC and local datetimes to dataframe
-    df_aware = df.with_columns([
-        s_utc,
-        s_local
-    ])
+    df_aware = df.with_columns([s_utc, s_local])
 
     return df_aware
