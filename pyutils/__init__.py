@@ -10,6 +10,7 @@ from .time import (
     make_naive_df_timezone_aware
 )
 from .vectors import detect_vector_interpolation
+from .markers import title, subtitle, marker_line
 
 __all__ = [
     # dicts
@@ -26,5 +27,8 @@ __all__ = [
     "make_naive_df_timezone_aware",
     # vector
     "detect_vector_interpolation",
-
+    # markers
+    "title",
+    "subtitle",
+    "marker_line",
 ]
