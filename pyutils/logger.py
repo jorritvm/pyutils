@@ -12,7 +12,7 @@ import logging
 import os
 import sys
 
-from clock import get_current_date_and_time_str
+from pyutils.clock import get_current_date_and_time_str
 
 __all__ = [
     "get_logger",
