@@ -1,5 +1,5 @@
 from .dicts import merge_dicts, has_empty_leaves
-from .time import (
+from .clock import (
     extract_iso_date,
     get_current_date_and_time_str,
     get_current_date_str,
@@ -11,6 +11,7 @@ from .time import (
 )
 from .vectors import detect_vector_interpolation
 from .markers import title, subtitle, marker_line
+from .logger import get_logger, setup_root_logger
 
 __all__ = [
     # dicts
@@ -31,4 +32,8 @@ __all__ = [
     "title",
     "subtitle",
     "marker_line",
+    # logger
+    "get_logger",
+    "setup_root_logger",
+
 ]

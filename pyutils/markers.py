@@ -51,7 +51,7 @@ def title(title: str = None, width: int = 0) -> str:
     left_pad = padding // 2
     right_pad = padding - left_pad
     line = "=" * banner_width
-    return f"\n{line}\n==={' ' * left_pad}{title}{' ' * right_pad}===\n{line}"
+    return f"{line}\n==={' ' * left_pad}{title}{' ' * right_pad}===\n{line}"
 
 def subtitle(subtitle, width: int = 0) -> str:
     """Returns a subtitle banner.

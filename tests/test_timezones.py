@@ -1,7 +1,7 @@
 import pytest
 import polars as pl
 from datetime import datetime, timezone
-from pyutils.time import make_naive_df_timezone_aware
+from pyutils.clock import make_naive_df_timezone_aware
 
 # 1. Simple consecutive dates
 def test_simple_consecutive_dates():

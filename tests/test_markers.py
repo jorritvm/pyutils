@@ -8,14 +8,13 @@ def test_title_default(monkeypatch):
     result = title()
     assert isinstance(result, str)
     assert '===' in result
-    assert result.count('\n') == 3
+    assert result.count('\n') == 2
 
 
 def test_title_custom(monkeypatch):
     monkeypatch.setattr("pyutils.markers._get_console_width", lambda: 30)
     result = title("MyTitle")
     assert "MyTitle" in result
-    assert result.startswith("\n")
     assert result.count("=") > 0
 
 
